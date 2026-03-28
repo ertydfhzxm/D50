@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing-C V3.0 Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans SC', sans-serif; background: #0f172a; margin: 0; padding: 0; display: flex; min-height: 100vh; color: #cbd5e1; }
+    
+    /* Responsive Sidebar */
+    .admin-sidebar { 
+      width: 250px; 
+      background: #1e293b; 
+      padding: 2rem 1rem; 
+      border-right: 1px solid rgba(255,255,255,0.05); 
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .admin-logo { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 2rem; display: block; text-decoration: none; }
+    .admin-nav { list-style: none; padding: 0; margin: 0; }
+    .admin-nav li { margin-bottom: 0.5rem; }
+    .admin-nav a { display: block; padding: 0.8rem 1rem; color: #cbd5e1; text-decoration: none; border-radius: 6px; transition: all 0.2s; cursor: pointer; }
+    .admin-nav a:hover, .admin-nav a.active { background: #38b2ac; color: #fff; }
+    
+    .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .admin-header { 
+      background: #1e293b; 
+      padding: 1rem 1.5rem; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 1px solid rgba(255,255,255,0.05); 
+      position: sticky; 
+      top:0; 
+      z-index: 10; 
+    }
+    
+    .mobile-toggle { display: none; background: none; border: none; color: #cbd5e1; font-size: 1.5rem; cursor: pointer; }
+    .admin-user { color: #f8fafc; font-weight: 500;}
+    .btn-logout { background: none; border: 1px solid #38b2ac; color: #38b2ac; padding: 0.4rem 1rem; border-radius: 4px; margin-left: 1rem; cursor: pointer; white-space: nowrap; }
+    .btn-logout:hover { background: #38b2ac; color: #fff;}
+    
+    .admin-content { padding: 1.5rem; flex: 1; overflow-x: hidden; }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+    .card { background: #1e293b; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+    .card-title { margin-top: 0; margin-bottom: 1.5rem; color: #f8fafc; font-size: 1.25rem; }
+    
+    /* Table Responsiveness */
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 800px; }
+    .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
+    .data-table th { color: #f8fafc; font-weight: 600; background: rgba(255,255,255,0.02); }
+    
+    .status-badge { padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+    .status-active { background: rgba(56, 178, 172, 0.2); color: #38b2ac; }
+    .status-banned { background: rgba(252, 129, 129, 0.2); color: #fc8181; }
+    
+    .action-btn { background: none; border: none; font-size: 0.85rem; cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 4px; transition: 0.2s;}
+    .action-btn.ban { color: #fc8181; border: 1px solid #fc8181; }
+    .action-btn.ban:hover { background: #fc8181; color: #fff; }
+    .action-btn.unban { color: #38b2ac; border: 1px solid #38b2ac; }
+    .action-btn.unban:hover { background: #38b2ac; color: #fff; }
+
+    /* Media Queries */
+    @media (max-width: 1024px) {
+      .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+      }
+      .admin-sidebar.active { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
+      .mobile-toggle { display: block; }
+      .admin-header { padding: 1rem; }
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+      }
+      .sidebar-overlay.active { display: block; }
+    }
+
+    @media (max-width: 768px) {
+      .admin-content { padding: 1rem; }
+      .card { padding: 1rem; }
+      .chart-container { flex-direction: column !important; }
+      .chart-item { min-width: 100% !important; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="admin-sidebar" id="adminSidebar">
+    <a href="index.html" class="admin-logo">⛏️ Landing-C Admin</a>
+    <ul class="admin-nav" id="adminNav">
+      <li><a data-target="users" class="active">👥 用户管理</a></li>
+      <li><a data-target="stories">📖 叙事馆审核</a></li>
+      <li><a data-target="dashboards">📊 数据看板</a></li>
+      <li><a data-target="activities">📍 活动管理</a></li>
+    </ul>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <button class="mobile-toggle" id="mobileToggle">☰</button>
+      <div style="display: flex; align-items: center;">
+        <span class="admin-user" id="adminName">Admin</span>
+        <button class="btn-logout" id="adminLogout">退出登录</button>
+      </div>
+    </header>
+    
+    <div class="admin-content">
+      
+      <!-- Users Tab -->
+      <div id="users" class="tab-section active">
+        <div class="card">
+          <h2 class="card-title">全站用户列表</h2>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>邮箱</th>
+                  <th>昵称</th>
+                  <th>积分</th>
+                  <th>状态</th>
+                  <th>注册时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody">
+                <tr><td colspan="7" style="text-align:center;">读取中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stories Tab -->
+      <div id="stories" class="tab-section">
+        <div class="card">
+          <h2 class="card-title">微光时刻内容管理</h2>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>作者</th>
+                  <th>标签</th>
+                  <th>内容片段</th>
+                  <th>共情数</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="storyTableBody">
+                <tr><td colspan="7" style="text-align:center;">读取中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboards Tab -->
+      <div id="dashboards" class="tab-section">
+        <div class="card">
+          <h2 class="card-title">全站数据雷达</h2>
+          <div class="chart-container" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div class="chart-item" style="flex: 1; min-width: 300px;">
+              <h3 style="color:#cbd5e1; font-size:1rem; text-align:center; margin-bottom: 1rem;">用户心情日记占比</h3>
+              <canvas id="moodChart" width="400" height="300"></canvas>
+            </div>
+            <div class="chart-item" style="flex: 1; min-width: 300px;">
+              <h3 style="color:#cbd5e1; font-size:1rem; text-align:center; margin-bottom: 1rem;">人生模拟器选择倾向</h3>
+              <canvas id="gameChart" width="400" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activities Tab -->
+      <div id="activities" class="tab-section">
+        <div class="card">
+          <h2 class="card-title">线下活动审核与管理</h2>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>发起人</th>
+                  <th>活动标题</th>
+                  <th>地点</th>
+                  <th>活动时间</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="activityTableBody">
+                <tr><td colspan="7" style="text-align:center;">读取中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('landingc_token');
+      const userStr = localStorage.getItem('landingc_user');
+      if (!token || !userStr) {
+        alert('请先登录管理员账号');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin') {
+        alert('权限不足，仅管理员可访问此页面');
+        window.location.href = 'experience.html';
+        return;
+      }
+
+      document.getElementById('adminName').textContent = user.nickname;
+      document.getElementById('adminLogout').addEventListener('click', () => {
+        localStorage.removeItem('landingc_token');
+        localStorage.removeItem('landingc_user');
+        window.location.href = 'index.html';
+      });
+
+      // Tab Switching Logic
+      const navLinks = document.querySelectorAll('.admin-nav a');
+      const tabSections = document.querySelectorAll('.tab-section');
+
+      // Mobile Menu Logic
+      const mobileToggle = document.getElementById('mobileToggle');
+      const adminSidebar = document.getElementById('adminSidebar');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        adminSidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+      }
+
+      mobileToggle.addEventListener('click', toggleSidebar);
+      sidebarOverlay.addEventListener('click', toggleSidebar);
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          navLinks.forEach(l => l.classList.remove('active'));
+          tabSections.forEach(s => s.classList.remove('active'));
+          
+          link.classList.add('active');
+          const target = document.getElementById(link.dataset.target);
+          if (target) {
+            target.classList.add('active');
+            if (link.dataset.target === 'users') loadUsers();
+            if (link.dataset.target === 'stories') loadStories();
+            if (link.dataset.target === 'activities') loadActivities();
+          }
+          
+          if (window.innerWidth <= 1024) toggleSidebar();
+        });
+      });
+
+      // Api Calls
+      const apiOptions = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      };
+
+      async function loadUsers() {
+        try {
+          const res = await fetch('/api/admin/users', apiOptions);
+          const data = await res.json();
+          const tbody = document.getElementById('userTableBody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+          
+          if (!data.users || data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无用户</td></tr>';
+            return;
+          }
+
+          data.users.forEach(u => {
+            const tr = document.createElement('tr');
+            const isActive = u.status === 'active';
+            const statusHtml = isActive 
+              ? `<span class="status-badge status-active">正常</span>` 
+              : `<span class="status-badge status-banned">禁用</span>`;
+            
+            const btnHtml = isActive
+              ? `<button class="action-btn ban" onclick="toggleUserStatus(${u.id}, 'banned')">封禁</button>`
+              : `<button class="action-btn unban" onclick="toggleUserStatus(${u.id}, 'active')">解封</button>`;
+
+            // Admin cannot ban admin
+            const finalBtnHtml = u.role === 'admin' ? '<span style="color:#94a3b8;font-size:0.8rem;">不可操作</span>' : btnHtml;
+
+            tr.innerHTML = `
+              <td>${u.id}</td>
+              <td style="max-width:200px; word-break:break-all;">${u.email || '-'}</td>
+              <td>${u.nickname} ${u.role==='admin'?'🛠️':''}</td>
+              <td>${u.points} 积分</td>
+              <td>${statusHtml}</td>
+              <td>${new Date(u.created_at).toLocaleDateString()}</td>
+              <td>${finalBtnHtml}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch(err) { console.error(err); }
+      }
+
+      window.toggleUserStatus = async function(id, newStatus) {
+        if(!confirm(`确定要将用将其状态改为 ${newStatus} 吗？`)) return;
+        try {
+          const res = await fetch(`/api/admin/users/${id}/status`, {
+            method: 'PUT',
+            ...apiOptions,
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (res.ok) loadUsers();
+          else alert('操作失败');
+        } catch(e) { console.error(e); }
+      }
+
+      async function loadStories() {
+        try {
+          const res = await fetch('/api/admin/stories', apiOptions);
+          const data = await res.json();
+          const tbody = document.getElementById('storyTableBody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+          
+          if (!data.stories || data.stories.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无故事</td></tr>';
+            return;
+          }
+
+          data.stories.forEach(s => {
+            const tr = document.createElement('tr');
+            const snippet = s.content.length > 25 ? s.content.substring(0,25) + '...' : s.content;
+            
+            let statusBadge = '';
+            let actionButtons = '';
+
+            if (s.status === 'pending_review') {
+              statusBadge = '<span class="status-badge" style="background:rgba(234, 179, 8, 0.2); color:#eab308;">待审核</span>';
+              actionButtons = `
+                <button class="action-btn unban" onclick="updateStoryStatus(${s.id}, 'approved')">通过</button>
+                <button class="action-btn ban" onclick="updateStoryStatus(${s.id}, 'rejected')">拒绝</button>
+              `;
+            } else if (s.status === 'approved') {
+              statusBadge = '<span class="status-badge status-active">已发布</span>';
+              actionButtons = `<button class="action-btn ban" onclick="updateStoryStatus(${s.id}, 'rejected')">下架</button>`;
+            } else {
+              statusBadge = '<span class="status-badge status-banned">已拒绝</span>';
+              actionButtons = `<button class="action-btn unban" onclick="updateStoryStatus(${s.id}, 'approved')">恢复</button>`;
+            }
+
+            tr.innerHTML = `
+              <td>${s.id}</td>
+              <td>${s.nickname || '匿名'}</td>
+              <td><span style="color:#38b2ac;">${s.tag || '-'}</span></td>
+              <td title="${s.content}" style="max-width:300px; word-break:break-all;">${snippet}</td>
+              <td>${s.empathy_count} 🤝</td>
+              <td>${statusBadge}</td>
+              <td>${actionButtons} <button class="action-btn ban" style="border-color:#ef4444; color:#ef4444;" onclick="deleteStory(${s.id})">彻底删除</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch(err) { console.error(err); }
+      }
+
+      window.updateStoryStatus = async function(id, newStatus) {
+        if(!confirm(`确定要将故事状态改为 ${newStatus === 'approved' ? '发布' : '下架/拒绝'} 吗？`)) return;
+        try {
+          const res = await fetch(`/api/admin/stories/${id}/status`, {
+            method: 'PUT',
+            ...apiOptions,
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (res.ok) loadStories();
+          else alert('操作失败');
+        } catch(e) { console.error(e); }
+      }
+
+      window.deleteStory = async function(id) {
+        if(!confirm('该故事将被永久删除，是否继续？')) return;
+        try {
+          const res = await fetch(`/api/admin/stories/${id}`, { method: 'DELETE', headers: apiOptions.headers });
+          if(res.ok) loadStories();
+          else alert('删除失败');
+        } catch(e) { console.error(e); }
+      }
+
+      async function loadActivities() {
+        try {
+          const res = await fetch('/api/admin/activities', apiOptions);
+          const data = await res.json();
+          const tbody = document.getElementById('activityTableBody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+          
+          if (!data.activities || data.activities.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无活动</td></tr>';
+            return;
+          }
+
+          data.activities.forEach(a => {
+            const tr = document.createElement('tr');
+            let statusBadge = '';
+            let actionButtons = '';
+
+            if (a.status === 'pending_review') {
+              statusBadge = '<span class="status-badge" style="background:rgba(234, 179, 8, 0.2); color:#eab308;">待审核</span>';
+              actionButtons = `
+                <button class="action-btn unban" onclick="updateActivityStatus(${a.id}, 'approved')">通过</button>
+                <button class="action-btn ban" onclick="updateActivityStatus(${a.id}, 'rejected')">拒绝</button>
+              `;
+            } else if (a.status === 'approved') {
+              statusBadge = '<span class="status-badge status-active">已通过</span>';
+              actionButtons = `<button class="action-btn ban" onclick="updateActivityStatus(${a.id}, 'rejected')">撤销</button>`;
+            } else {
+              statusBadge = '<span class="status-badge status-banned">已拒绝</span>';
+              actionButtons = `<button class="action-btn unban" onclick="updateActivityStatus(${a.id}, 'approved')">恢复</button>`;
+            }
+
+            tr.innerHTML = `
+              <td>${a.id}</td>
+              <td>${a.nickname || '用户'}</td>
+              <td style="max-width:200px; word-break:break-all;">${a.title}</td>
+              <td>${a.location}</td>
+              <td>${new Date(a.event_time).toLocaleString()}</td>
+              <td>${statusBadge}</td>
+              <td>${actionButtons}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch(err) { console.error(err); }
+      }
+
+      window.updateActivityStatus = async function(id, newStatus) {
+        if(!confirm(`确定要将活动状态改为 ${newStatus === 'approved' ? '通过' : '拒绝'} 吗？`)) return;
+        try {
+          const res = await fetch(`/api/admin/activities/${id}/status`, {
+            method: 'PUT',
+            ...apiOptions,
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (res.ok) loadActivities();
+          else alert('操作失败');
+        } catch(e) { console.error(e); }
+      }
+
+      // Load Charts initial data
+      function loadCharts() {
+        fetch('/api/telemetry/dashboard', apiOptions)
+        .then(res => res.json())
+        .then(data => {
+          if(data.error) return;
+          if (data.moods && data.moods.length > 0) {
+            new Chart(document.getElementById('moodChart'), {
+              type: 'doughnut',
+              data: {
+                labels: data.moods.map(m => m.mood || '未知'),
+                datasets: [{ data: data.moods.map(m => m.count), backgroundColor: ['#38b2ac', '#fc8181', '#f6e05e', '#63b3ed', '#9f7aea'], borderWidth: 0 }]
+              },
+              options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#cbd5e1' } } }, 
+                cutout: '70%'
+              }
+            });
+          }
+          if (data.gamePaths && data.gamePaths.length > 0) {
+            new Chart(document.getElementById('gameChart'), {
+              type: 'bar',
+              data: {
+                labels: data.gamePaths.map(g => g.path),
+                datasets: [{ label: '触发次数', data: data.gamePaths.map(g => g.count), backgroundColor: '#38b2ac', borderRadius: 4 }]
+              },
+              options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                  y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#cbd5e1', stepSize: 1 } }, 
+                  x: { grid: { display:false }, ticks: { color: '#cbd5e1' } } 
+                }, 
+                plugins: { legend: { display: false } } 
+              }
+            });
+          }
+        }).catch(console.error);
+      }
+
+      // Initial boot
+      loadUsers();
+      loadCharts();
+    });
+  </script>
+</body>
+</html>

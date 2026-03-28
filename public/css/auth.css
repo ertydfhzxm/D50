@@ -1,0 +1,148 @@
+/* Auth Modal CSS */
+.auth-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.auth-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.auth-modal-content {
+  background: #1a202c;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+.auth-modal-overlay.active .auth-modal-content {
+  transform: translateY(0);
+}
+
+.auth-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.auth-modal-close:hover {
+  color: #fff;
+}
+
+.auth-tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.auth-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #a0aec0;
+  padding: 0.5rem 0;
+  font-size: 1.1rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.auth-tab.active {
+  color: #38b2ac;
+  font-weight: 500;
+}
+
+.auth-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #38b2ac;
+}
+
+.auth-form-group {
+  margin-bottom: 1.2rem;
+}
+
+.auth-form-group label {
+  display: block;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  margin-bottom: 0.4rem;
+}
+
+.auth-form-input {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.auth-form-input:focus {
+  outline: none;
+  border-color: #38b2ac;
+  background: rgba(255,255,255,0.1);
+}
+
+.auth-btn {
+  width: 100%;
+  background: #38b2ac;
+  color: #fff;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.auth-btn:hover {
+  opacity: 0.9;
+}
+
+.auth-error {
+  color: #fc8181;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  min-height: 1.2rem;
+}
+
+/* Global Nav User Dropdown */
+.nav-user-menu { position: relative; display: inline-block; margin-left: auto; }
+.nav-avatar { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.25rem 0; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+.nav-avatar:hover { opacity: 0.8; }
+.nav-avatar .avatar-icon { font-size: 1.2rem; background: rgba(56, 178, 172, 0.1); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.dropdown-menu { position: absolute; top: 100%; right: 0; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; padding: 0.5rem 0; min-width: 140px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: all 0.2s ease; z-index: 1000; border: 1px solid rgba(0,0,0,0.05); }
+.nav-user-menu:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+.dropdown-menu a { display: block; padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none; transition: 0.2s; color: #475569; }
+.dropdown-menu a:hover { background: rgba(0,0,0,0.02); padding-left: 1.25rem; color: var(--color-primary); }

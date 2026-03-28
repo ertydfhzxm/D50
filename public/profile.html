@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing-C · 个人主页</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <style>
+    body { background: var(--color-bg); padding-top: 80px; }
+    .profile-layout { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
+    
+    .profile-sidebar { background: var(--color-bg-card); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); text-align: center; height: fit-content; border: 1px solid rgba(0,0,0,0.05); }
+    .profile-avatar { width: 100px; height: 100px; background: rgba(56,178,172,0.1); border-radius: 50%; border: 3px solid rgba(56,178,172,0.3); font-size: 3rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+    .profile-name { font-size: 1.5rem; font-weight: 800; color: var(--color-text); margin-bottom: 0.5rem; }
+    .profile-date { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 2rem; }
+    
+    .profile-stats { display: flex; justify-content: space-around; background: rgba(255,107,74,0.05); border-radius: 16px; padding: 1rem; margin-bottom: 2rem; }
+    .stat-item { display: flex; flex-direction: column; gap: 0.25rem; }
+    .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--color-primary); }
+    .stat-label { font-size: 0.8rem; color: var(--color-text-secondary); font-weight: 600; }
+    
+    .profile-nav-btn { display: block; width: 100%; padding: 1rem; text-align: left; background: none; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; }
+    .profile-nav-btn:hover, .profile-nav-btn.active { background: rgba(56,178,172,0.1); color: var(--color-accent-dark); }
+    
+    .profile-content { background: var(--color-bg-card); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); min-height: 500px; border: 1px solid rgba(0,0,0,0.05); }
+    .content-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 1rem; }
+    
+    .empty-state { text-align: center; padding: 4rem 0; color: var(--color-text-muted); }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+
+    .breadcrumb-nav { max-width: 1200px; margin: 1rem auto; padding: 0 2rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted); }
+    .breadcrumb-nav a { color: var(--color-text-secondary); font-weight: 500; text-decoration: none; }
+    .breadcrumb-nav a:hover { color: var(--color-primary); }
+
+    @media (max-width: 768px) {
+      .profile-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-icon">⛏️</span>
+        <span class="logo-text">Landing-C</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="experience.html">陪伴空间</a></li>
+        <li><a href="game.html">人生游戏</a></li>
+        <li><a href="about.html">使命愿景</a></li>
+        <li><a href="#" id="navLoginBtn">登录 / 注册</a></li>
+        <li id="navUserMenu" class="nav-user-menu" style="display:none;">
+          <a href="profile.html" class="nav-avatar">
+            <span class="avatar-icon">🧑</span>
+            <span id="navUsername"></span>
+          </a>
+          <div class="dropdown-menu">
+            <a href="profile.html">个人主页</a>
+            <a href="settings.html">账号设置</a>
+            <a href="#" id="navLogout">退出登录</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="breadcrumb-nav">
+    <a href="index.html">返回主页</a>
+    <span>/</span>
+    <span>个人主页</span>
+  </div>
+
+  <main class="profile-layout">
+    <aside class="profile-sidebar">
+      <div class="profile-avatar">🧑</div>
+      <h2 class="profile-name" id="displayUsername">加载中...</h2>
+      <p class="profile-date">加入于 2026年春</p>
+      
+      <div class="profile-stats">
+        <div class="stat-item">
+          <span class="stat-val" id="statPoints">--</span>
+          <span class="stat-label">微光积分</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" id="statDiaryCount">--</span>
+          <span class="stat-label">日记篇数</span>
+        </div>
+      </div>
+
+      <nav>
+        <button class="profile-nav-btn active">📝 我的日记</button>
+        <button class="profile-nav-btn" onclick="window.location.href='game.html'">🎮 游戏存档</button>
+        <button class="profile-nav-btn" onclick="window.location.href='experience.html#tab-checkin'">🌱 社区共创</button>
+        <button class="profile-nav-btn" onclick="window.location.href='settings.html'">⚙️ 账号设置</button>
+      </nav>
+    </aside>
+
+    <section class="profile-content">
+      <h2 class="content-title">📝 我的日记</h2>
+      <div id="diaryListContent">
+        <div class="empty-state">
+          <div class="empty-icon">📔</div>
+          <p>载入中...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userStr = localStorage.getItem('landingc_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        document.getElementById('displayUsername').textContent = user.nickname;
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html>

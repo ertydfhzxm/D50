@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing-C: 人生路径模拟器</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/game.css">
+  <script>
+    window.onerror = function(msg, url, line) {
+      const log = document.createElement('div');
+      log.style = "position:fixed;bottom:0;left:0;right:0;background:rgba(255,0,0,0.8);color:white;padding:10px;font-size:12px;z-index:9999;max-height:100px;overflow:auto;";
+      log.textContent = "Script Error: " + msg + " (Line: " + line + ")";
+      document.body.appendChild(log);
+    };
+  </script>
+</head>
+<body class="game-body">
+  <header class="game-header">
+    <div style="display: flex; align-items: center; min-width: 0; flex: 1;">
+      <button id="dashboardToggle" class="dashboard-toggle" title="查看状态" style="flex-shrink: 0;">
+        📊
+      </button>
+      <a href="/" class="game-logo" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem; min-width: 0; overflow: hidden; white-space: nowrap; height: 100%;">
+        <img src="assets/images/ai-avatar.png" style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: block;">
+        <span class="game-logo-text" style="color: #fff; font-weight: 700; font-size: 1rem; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">LANDING-C</span>
+      </a>
+      <a href="/experience.html" class="back-btn" style="margin-left: 0.5rem; font-size: 0.8rem; color: #94a3b8; text-decoration: none; flex-shrink: 0;">
+        ← 返回
+      </a>
+    </div>
+    
+    <div class="user-controls" style="display: flex; align-items: center; gap: 1.2rem; flex-shrink: 0; padding-right: 0.5rem;">
+      <button id="btnSaveGame" class="save-btn" style="background: rgba(56, 178, 172, 0.1); border: 1px solid rgba(56, 178, 172, 0.3); color: #38b2ac; padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; font-weight: 500;">
+        存档
+      </button>
+      <div id="navUserMenu" class="nav-user-menu" style="display:none; position: relative;">
+        <div class="user-info nav-avatar" id="userInfo" style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; color: #cbd5e1;">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=default" id="userAvatar" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);">
+          <span id="navUsername" style="font-size: 0.85rem; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">...</span>
+        </div>
+        <div class="dropdown-menu" style="right: 0; left: auto; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+          <a href="/profile.html" style="color: #e2e8f0; padding: 0.75rem 1rem; text-decoration: none; display: block; font-size: 0.85rem;">个人主页</a>
+          <a href="#" id="navLogout" style="color: #fc8181; padding: 0.75rem 1rem; text-decoration: none; display: block; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05);">退出登录</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="game-container">
+    
+    <!-- 1. Start Screen -->
+    <section id="screen-start" class="screen active">
+      <div class="start-content">
+        <h1 class="game-title">人生路径 <span>(Beta)</span></h1>
+        <p class="game-subtitle">一个关于选择、试错与沉淀的职业模拟人生</p>
+        <div class="start-actions">
+          <button id="btnNewGame" class="game-btn-primary">开启新旅程</button>
+          <button id="btnOpenLoadModal" class="game-btn-secondary">读取存档</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Character Creation -->
+    <section id="screen-creation" class="screen">
+      <div class="creation-wizard">
+        <h2>创建你的数字分身</h2>
+        
+        <div class="creation-step" id="step-traits">
+          <h3>1. 选择初始特质 (选2项)</h3>
+          <div class="trait-grid" id="traitGrid"></div>
+          <button class="game-btn-primary next-step" data-next="step-school" disabled>下一步</button>
+        </div>
+
+        <div class="creation-step" id="step-school" style="display:none;">
+          <h3>2. 你的院校起点</h3>
+          <p class="hint">这会影响你的默认难度与初始发展路径。</p>
+          <div class="school-grid" id="schoolGrid">
+            <div class="school-card" data-id="985">🏆 985/211 (简单)</div>
+            <div class="school-card" data-id="本科">📘 普通本科 (标准)</div>
+            <div class="school-card" data-id="职校">🔧 职业院校 (困难, 锁定部分学术路线, 解锁蓝领路线)</div>
+          </div>
+          <div class="step-nav">
+            <button class="game-btn-secondary prev-step" data-prev="step-traits">上一步</button>
+            <button class="game-btn-primary next-step" data-next="step-major" disabled>下一步</button>
+          </div>
+        </div>
+
+        <div class="creation-step" id="step-major" style="display:none;">
+          <h3>3. 大学专业</h3>
+          <p class="hint">决定你早期的核心事件与职业树。</p>
+          <div class="major-grid" id="majorGrid"></div>
+          <div class="step-nav">
+            <button class="game-btn-secondary prev-step" data-prev="step-school">上一步</button>
+            <button class="game-btn-primary" id="btnStartSimulation" disabled>开始模拟</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. Main Game View -->
+    <section id="screen-main" class="screen">
+      <div class="game-layout">
+        
+        <!-- Left: Stats Dashboard -->
+        <div class="game-dashboard">
+          <div class="stat-group">
+            <h4>状态</h4>
+            <div class="stat-bar"><span class="label">😊 喜悦</span><div class="bar-bg"><div class="bar-fill" id="bar-joy" style="background:#f6ad55; width:50%;"></div></div></div>
+            <div class="stat-bar"><span class="label">💪 健康</span><div class="bar-bg"><div class="bar-fill" id="bar-health" style="background:#fc8181; width:80%;"></div></div></div>
+            <div class="stat-value"><span class="label">💰 资金</span> <span id="val-money">1000</span></div>
+            <div class="stat-value"><span class="label">⏳ 回合</span> <span id="val-turn">1</span> / 36</div>
+          </div>
+          
+          <div class="stat-group">
+            <h4>能力</h4>
+            <div class="stat-value"><span class="label">🎓 学术</span> <span id="val-academic">10</span></div>
+            <div class="stat-value"><span class="label">💼 职业</span> <span id="val-career">10</span></div>
+            <div class="stat-value"><span class="label">🗣️ 社交</span> <span id="val-social">10</span></div>
+            <div class="stat-value"><span class="label">🎨 创意</span> <span id="val-creative">10</span></div>
+          </div>
+
+          <div class="stat-group">
+            <h4>档案</h4>
+            <div class="profile-info text-sm" id="profileInfo">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Terminal Area -->
+        <div class="game-terminal">
+          <div id="terminalHistory" class="terminal-history">
+            <!-- Event logs injected here -->
+          </div>
+          <div id="terminalActions" class="terminal-actions">
+            <!-- Action buttons injected here -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. Ending Screen -->
+    <section id="screen-ending" class="screen">
+      <div class="ending-content text-center">
+        <h1 id="endingTitle" class="text-4xl font-bold mb-4">结局</h1>
+        <p id="endingDesc" class="text-xl text-gray-400 mb-8">...</p>
+        <div class="ending-stats mb-8" id="endingStats"></div>
+        <button class="game-btn-primary" onclick="location.reload()">重新开始</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Save/Load Modal -->
+  <div id="saveLoadModal" class="auth-modal-overlay">
+    <div class="auth-modal-content" style="max-width: 500px;">
+      <button class="auth-modal-close" onclick="closeSaveLoadModal()">&times;</button>
+      <h3 id="slModalTitle" style="color:#fff; margin-bottom: 1rem;">存档管理</h3>
+      <div id="slotsContainer" style="display:flex; flex-direction:column; gap:1rem;">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <div id="authModalContainer"></div>
+  <script src="js/auth.js"></script>
+  
+  <script src="js/game/events.js"></script>
+  <script src="js/game/engine.js"></script>
+  <script src="js/game/ui.js"></script>
+</body>
+</html>

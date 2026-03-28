@@ -1,0 +1,19 @@
+{
+  "apps": [
+    {
+      "name": "landing-c",
+      "script": "server.js",
+      "watch": false,
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": 6687
+      },
+      "error_file": "server.log",
+      "out_file": "server.log",
+      "merge_logs": true,
+      "autorestart": true,
+      "max_restarts": 10,
+      "restart_delay": 4000
+    }
+  ]
+}
